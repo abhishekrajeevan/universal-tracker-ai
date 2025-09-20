@@ -37,6 +37,8 @@ async function loadConfig() {
     document.getElementById('prefillPriority').checked = !!ai.prefill_priority;
     document.getElementById('prefillTags').checked = !!ai.prefill_tags;
     document.getElementById('prefillSummary').checked = !!ai.prefill_summary;
+    const prefillTimeEl = document.getElementById('prefillTime');
+    if (prefillTimeEl) prefillTimeEl.checked = !!ai.prefill_time;
 
     updateCheckboxUI();
   } catch (e) {
@@ -65,6 +67,7 @@ async function saveAllConfig() {
       prefill_priority: document.getElementById('prefillPriority').checked,
       prefill_tags: document.getElementById('prefillTags').checked,
       prefill_summary: document.getElementById('prefillSummary').checked,
+      prefill_time: (document.getElementById('prefillTime')?.checked) || false,
     };
     await chrome.storage.local.set({ [AI_OPTS_KEY]: aiConfig });
 
@@ -260,4 +263,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadConfig();
 });
-

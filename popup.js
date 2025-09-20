@@ -662,6 +662,45 @@ function hideAILoadingState() {
   }
 }
 
+// Estimate the time to consume (in minutes) using simple heuristics
+function estimateTimeToConsume(meta, category) {
+  try {
+    const lowerTitle = (meta?.title || '').toLowerCase();
+    const lowerDesc = (meta?.description || '').toLowerCase();
+    const host = (meta?.siteName || meta?.rawUrl || '').toLowerCase();
+    const cat = (category || '').toLowerCase();
+
+    // YouTube or video platforms
+    if (host.includes('youtube') || host.includes('vimeo') || cat === 'video' || cat === 'trailer') {
+      // Rough defaults for short-form content
+      if (lowerTitle.includes('trailer')) return 3;
+      return 10; // default short video
+    }
+
+    // Movie / TV
+    if (cat === 'movie') return 120;
+    if (cat === 'tv') return 45;
+
+    // Podcast
+    if (cat === 'podcast' || host.includes('spotify')) return 45;
+
+    // Course / Tutorial
+    if (cat === 'course' || lowerTitle.includes('course') || lowerTitle.includes('tutorial')) return 60;
+
+    // Blog / Research / Tool / Other
+    // Estimate by reading time using meta description length as proxy
+    const text = meta?.description || meta?.title || '';
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    if (words > 0) {
+      const minutes = Math.max(3, Math.round(words / 200));
+      return Math.min(60, minutes);
+    }
+    return 6; // safe default for short reads
+  } catch {
+    return 6;
+  }
+}
+
 async function init() {
   // Get metadata only if not editing
   let meta = null;
@@ -782,6 +821,17 @@ async function init() {
         }
       }
       
+      // Optionally estimate time to consume
+      let timeToConsume = null;
+      try {
+        const aiStorage = await chrome.storage.local.get(['ai_options']);
+        const aiOptions = aiStorage.ai_options || {};
+        if (aiOptions.prefill_time) {
+          const currentCategory = selectedCategory;
+          timeToConsume = estimateTimeToConsume(meta || {}, currentCategory);
+        }
+      } catch {}
+
       const itemData = {
         title: document.getElementById('title').value.trim(),
         url: finalUrl,
@@ -791,7 +841,9 @@ async function init() {
         tags: splitTags(document.getElementById('tags').value),
         notes: document.getElementById('notes').value.trim(),
         source: editingItemId ? undefined : meta.siteName, // Don't change source when editing
-        reminder_time: reminderTime
+        reminder_time: reminderTime,
+        // new optional field
+        time_to_consume_mins: timeToConsume || undefined
       };
       
       let item;
