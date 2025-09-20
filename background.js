@@ -403,6 +403,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // Deferred enrichment using external providers (TMDb) when configured
 async function enrichWithTMDb(item) {
   try {
+    // Only fetch for relevant categories (Movie/TV/Trailer)
+    const cat = ((item && item.category) || '').toString().toLowerCase();
+    if (!['movie','tv','trailer'].includes(cat)) {
+      return { genre: null, streamingAvailability: null };
+    }
     const ai = (await chrome.storage.local.get(['ai_options'])).ai_options || {};
     const tmdbKey = ai.tmdb_api_key || '';
     const country = (ai.jw_country || 'US').toUpperCase();
@@ -901,3 +906,96 @@ function createFallbackSuggestions(meta) {
   console.log('Fallback suggestions created:', result);
   return result;
 }
+
+// ===== Deferred enrichment (Phase 2) =====
+async function enrichWithTMDb(item) {
+  try {
+    // Only fetch for relevant categories (Movie/TV/Trailer)
+    const cat = ((item && item.category) || '').toString().toLowerCase();
+    if (!['movie','tv','trailer'].includes(cat)) {
+      return { genre: null, streamingAvailability: null };
+    }
+    const ai = (await chrome.storage.local.get(['ai_options'])).ai_options || {};
+    const tmdbKey = ai.tmdb_api_key || '';
+    const normalizeCountry = (c) => {
+      if (!c) return 'US';
+      const u = String(c).trim().toUpperCase();
+      const map3to2 = { USA:'US', GBR:'GB', IND:'IN', ARE:'AE', DEU:'DE', FRA:'FR', ESP:'ES', ITA:'IT', AUS:'AU', CAN:'CA' };
+      if (u.length === 2) return u;
+      if (u.length === 3 && map3to2[u]) return map3to2[u];
+      if (u === 'UK') return 'GB';
+      return u.slice(0,2);
+    };
+    const country = normalizeCountry(ai.jw_country || 'US');
+    if (!tmdbKey) return { genre: null, streamingAvailability: null };
+
+    const title = item.title || '';
+    if (!title) return { genre: null, streamingAvailability: null };
+
+    const q = encodeURIComponent(title.replace(/\s+\([^\)]*\)$/, ''));
+    const searchUrl = `https://api.themoviedb.org/3/search/multi?api_key=${tmdbKey}&query=${q}&include_adult=false`;
+    console.log('ENRICH: TMDb search:', searchUrl);
+    const sResp = await fetch(searchUrl);
+    if (!sResp.ok) return { genre: null, streamingAvailability: null };
+    const sJson = await sResp.json();
+    const first = (sJson && Array.isArray(sJson.results) && sJson.results[0]) || null;
+    if (!first) return { genre: null, streamingAvailability: null };
+    const mediaType = first.media_type === 'tv' ? 'tv' : (first.media_type === 'movie' ? 'movie' : null);
+    const id = first.id;
+    if (!mediaType || !id) return { genre: null, streamingAvailability: null };
+
+    const detailUrl = `https://api.themoviedb.org/3/${mediaType}/${id}?api_key=${tmdbKey}&append_to_response=watch/providers`;
+    console.log('ENRICH: TMDb details:', detailUrl, 'country:', country);
+    const dResp = await fetch(detailUrl);
+    if (!dResp.ok) return { genre: null, streamingAvailability: null };
+    const dJson = await dResp.json();
+
+    const genres = Array.isArray(dJson.genres) ? dJson.genres.map(g=>g.name).filter(Boolean) : [];
+    let providers = [];
+    try {
+      const prov = dJson["watch/providers"]?.results?.[country];
+      const lists = [prov?.flatrate, prov?.ads, prov?.free, prov?.rent, prov?.buy].filter(Array.isArray);
+      providers = lists.flat().map(p=>p.provider_name).filter(Boolean);
+    } catch {}
+
+    return {
+      genre: genres.join(', ') || null,
+      streamingAvailability: providers.length ? providers.join(', ') : null
+    };
+  } catch (e) {
+    console.log('ENRICH: TMDb error:', e?.message||e);
+    return { genre: null, streamingAvailability: null };
+  }
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type === 'ENRICH_ITEM') {
+    (async()=>{
+      try{
+        const items = await localAdapter.getAll();
+        const it = items.find(x => x.id === msg.id);
+        if (!it) { sendResponse({success:false, error:'Item not found'}); return; }
+        const tmdb = await enrichWithTMDb(it);
+        sendResponse({success:true, suggestions:{ genre: tmdb.genre, streaming_availability: tmdb.streamingAvailability }});
+      }catch(e){ sendResponse({success:false, error:e.message}); }
+    })();
+    return true;
+  } else if (msg?.type === 'APPLY_ENRICHMENT') {
+    (async()=>{
+      try{
+        const items = await localAdapter.getAll();
+        const idx = items.findIndex(x => x.id === msg.id);
+        if (idx === -1) { sendResponse({success:false, error:'Item not found'}); return; }
+        const it = items[idx];
+        const updates = {};
+        if (typeof msg.fields?.genre === 'string' && msg.fields.genre.trim()) updates.genre = msg.fields.genre.trim();
+        if (typeof msg.fields?.streaming_availability === 'string' && msg.fields.streaming_availability.trim()) updates.streaming_availability = msg.fields.streaming_availability.trim();
+        const merged = { ...it, ...updates, updated_at: nowISO() };
+        await localAdapter.upsert(merged);
+        await queueAdapter.enqueue(merged);
+        sendResponse({success:true});
+      }catch(e){ sendResponse({success:false, error:e.message}); }
+    })();
+    return true;
+  }
+});
