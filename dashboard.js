@@ -1,4 +1,4 @@
-async function getAllItems() {
+﻿async function getAllItems() {
   return await localAdapter.getAll();
 }
 
@@ -95,11 +95,12 @@ function renderList(items, sortKey) {
       </div>
       <div class="meta">
         <span>${it.category || 'Other'}</span>
-        ${host ? `<span>• ${host}</span>` : ''}
-        ${(it.tags && it.tags.length) ? `<span>• ${it.tags.join(', ')}</span>` : ''}
-        ${(it.reminder_time) ? `<span>• Reminder: ${new Date(it.reminder_time).toLocaleString()}</span>` : ''}
+        ${(typeof it.time_to_consume_mins === 'number') ? `<span>• ⏱️ ${it.time_to_consume_mins}m</span>` : ''}
+        ${host ? `<span>â€¢ ${host}</span>` : ''}
+        ${(it.tags && it.tags.length) ? `<span>â€¢ ${it.tags.join(', ')}</span>` : ''}
+        ${(it.reminder_time) ? `<span>â€¢ Reminder: ${new Date(it.reminder_time).toLocaleString()}</span>` : ''}
       </div>
-      ${it.notes ? `<div class="notes">${it.notes.length>500?it.notes.slice(0,500)+"…":it.notes}</div>` : ''}
+      ${it.notes ? `<div class="notes">${it.notes.length>500?it.notes.slice(0,500)+"â€¦":it.notes}</div>` : ''}
       <div class="item-actions">
         <button class="action-btn ${it.status==='done'?'':'solid'}" data-act="toggle" data-id="${it.id}">${it.status==='done'?'Mark To Do':'Mark Done'}</button>
         <button class="action-btn danger" data-act="delete" data-id="${it.id}">Delete</button>
@@ -158,7 +159,7 @@ function applyFiltersAndRender(items) {
     const total = filtered.length;
     const done = filtered.filter(i => i.status === 'done').length;
     const todo = total - done;
-    statsbar.textContent = `Filtered: ${total} • Done: ${done} • To Do: ${todo}`;
+    statsbar.textContent = `Filtered: ${total} â€¢ Done: ${done} â€¢ To Do: ${todo}`;
   }
 }
 
@@ -187,7 +188,7 @@ async function init() {
       if (syncSpinner) {
         syncSpinner.classList.remove('hidden');
       }
-      if (syncText) syncText.textContent = 'Syncing…';
+      if (syncText) syncText.textContent = 'Syncingâ€¦';
       await new Promise((resolve, reject) => {
         chrome.runtime.sendMessage({ type: 'SYNC_NOW' }, (resp) => {
           if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
@@ -363,6 +364,9 @@ function openEditModal(item){
     if (window.showToast) showToast('Item updated', 'success');
   };
 }
+
+
+
 
 
 

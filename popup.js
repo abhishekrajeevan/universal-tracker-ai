@@ -1,4 +1,4 @@
-// Global state for editing
+﻿// Global state for editing
 let editingItemId = null;
 let tagCache = [];
 
@@ -23,27 +23,27 @@ async function getMetadata() {
 
 function getCategoryIcon(category) {
   const icons = {
-    'Movie': '🎬',
-    'TV': '📺', 
-    'Trailer': '🎭',
-    'Video': '🎥',
-    'Blog': '📝',
-    'Podcast': '🎧',
-    'Book': '📖',
-    'Course': '🎓',
-    'Game': '🎮',
-    'Other': '📄'
+    'Movie': 'ðŸŽ¬',
+    'TV': 'ðŸ“º', 
+    'Trailer': 'ðŸŽ­',
+    'Video': 'ðŸŽ¥',
+    'Blog': 'ðŸ“',
+    'Podcast': 'ðŸŽ§',
+    'Book': 'ðŸ“–',
+    'Course': 'ðŸŽ“',
+    'Game': 'ðŸŽ®',
+    'Other': 'ðŸ“„'
   };
-  return icons[category] || '📄';
+  return icons[category] || 'ðŸ“„';
 }
 
 function getPriorityIcon(priority) {
   const icons = {
-    'low': '🔵',
-    'medium': '🟡',
-    'high': '🔴'
+    'low': 'ðŸ”µ',
+    'medium': 'ðŸŸ¡',
+    'high': 'ðŸ”´'
   };
-  return icons[priority] || '🟡';
+  return icons[priority] || 'ðŸŸ¡';
 }
 
 // Inline SVG icons (ASCII-only) for robust rendering
@@ -197,7 +197,7 @@ function renderItems(items) {
   if (items.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">📚</div>
+        <div class="empty-state-icon">ðŸ“š</div>
         <div>No items yet</div>
         <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">Start tracking content by saving your first item!</div>
       </div>
@@ -217,43 +217,43 @@ function renderItems(items) {
     if (it.reminder_time) {
       const reminderText = formatReminderTime(it.reminder_time);
       const isActive = new Date(it.reminder_time) > new Date();
-      reminderDisplay = `<span class="reminder-pill ${isActive ? 'reminder-active' : ''}">${isActive ? '⏰' : '⏰'} ${reminderText}</span>`;
+      reminderDisplay = `<span class="reminder-pill ${isActive ? 'reminder-active' : ''}">${isActive ? 'â°' : 'â°'} ${reminderText}</span>`;
     }
     
     div.innerHTML = `
       <div class="item-title">
         <span class="category-icon">${getCategoryIcon(it.category)}</span>
         ${it.title || '(untitled)'}
-        <span class="status-pill status-${it.status}">${it.status === 'done' ? '✅ Done' : '📋 To Do'}</span>
+        <span class="status-pill status-${it.status}">${it.status === 'done' ? 'âœ… Done' : 'ðŸ“‹ To Do'}</span>
         ${editingItemId === it.id ? '<span class="edit-indicator">Editing</span>' : ''}
       </div>
       <div class="item-meta">
         <span>${getPriorityIcon(it.priority || 'medium')} ${it.category || 'Other'}</span>
-        <span>•</span>
+        <span>â€¢</span>
         <span>${host}</span>
-        ${it.tags && it.tags.length > 0 ? `<span>•</span><span>🏷️ ${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>` : ''}
+        ${it.tags && it.tags.length > 0 ? `<span>â€¢</span><span>ðŸ·ï¸ ${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>` : ''}
         ${reminderDisplay}
       </div>
       <div class="item-actions">
         <button class="btn btn-secondary btn-small" data-act="toggle" data-id="${it.id}">
-          ${it.status === 'done' ? '↩️ Mark To Do' : '✅ Mark Done'}
+          ${it.status === 'done' ? 'â†©ï¸ Mark To Do' : 'âœ… Mark Done'}
         </button>
         <button class="btn btn-secondary btn-small" data-act="edit" data-id="${it.id}">
-          ✏️ Edit
+          âœï¸ Edit
         </button>
         <button class="btn btn-secondary btn-small" data-act="remove" data-id="${it.id}">
-          🗑️ Delete
+          ðŸ—‘ï¸ Delete
         </button>
-        ${it.url ? `<a class="link" href="${it.url}" target="_blank">🔗 Open</a>` : ''}
+        ${it.url ? `<a class="link" href="${it.url}" target="_blank">ðŸ”— Open</a>` : ''}
       </div>
     `;
     // Clean labels and hide host bullet when URL absent
     const toggleBtn = div.querySelector('button[data-act="toggle"]');
-    if (toggleBtn) toggleBtn.textContent = it.status === 'done' ? '↺ Mark To Do' : '✓ Mark Done';
+    if (toggleBtn) toggleBtn.textContent = it.status === 'done' ? 'â†º Mark To Do' : 'âœ“ Mark Done';
     const editBtn = div.querySelector('button[data-act="edit"]');
-    if (editBtn) editBtn.textContent = '✎ Edit';
+    if (editBtn) editBtn.textContent = 'âœŽ Edit';
     const delBtn = div.querySelector('button[data-act="remove"]');
-    if (delBtn) delBtn.textContent = '🗑 Delete';
+    if (delBtn) delBtn.textContent = 'ðŸ—‘ Delete';
     const linkEl = div.querySelector('a.link');
     if (linkEl) linkEl.textContent = 'Open';
     if (!host) {
@@ -285,9 +285,9 @@ function renderItems(items) {
 
       const metaEl2 = div.querySelector('.item-meta');
       if (metaEl2) {
-        let html2 = `<span>${typeof priorityDotSVG==='function'?priorityDotSVG(it.priority || 'medium'):'•'} ${it.category || 'Other'}</span>`;
-        if (host) html2 += `<span>•</span><span>${host}</span>`;
-        if (it.tags && it.tags.length > 0) html2 += `<span>•</span><span>${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>`;
+        let html2 = `<span>${typeof priorityDotSVG==='function'?priorityDotSVG(it.priority || 'medium'):'â€¢'} ${it.category || 'Other'}</span>`;
+        if (host) html2 += `<span>â€¢</span><span>${host}</span>`;
+        if (it.tags && it.tags.length > 0) html2 += `<span>â€¢</span><span>${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>`;
         html2 += `${reminderDisplay}`;
         metaEl2.innerHTML = html2;
       }
@@ -368,7 +368,7 @@ async function startEditing(item) {
   
   // Update UI
   document.getElementById('editIndicator').style.display = 'block';
-  document.getElementById('saveBtnIcon').textContent = '✏️';
+  document.getElementById('saveBtnIcon').textContent = 'âœï¸';
   document.getElementById('saveBtnText').textContent = 'Update Item';
   
   // Hide page meta when editing
@@ -395,7 +395,7 @@ function cancelEditing() {
   
   // Update UI
   document.getElementById('editIndicator').style.display = 'none';
-  document.getElementById('saveBtnIcon').textContent = '💾';
+  document.getElementById('saveBtnIcon').textContent = 'ðŸ’¾';
   document.getElementById('saveBtnText').textContent = 'Save Item';
   document.getElementById('pageMeta').style.display = 'flex';
 }
@@ -427,7 +427,7 @@ async function checkConnectionStatus() {
     console.log('Connection status response:', response);
     
     if (response && response.success) {
-      statusIndicator.textContent = '🟢';
+      statusIndicator.textContent = 'ðŸŸ¢';
       statusText.textContent = `Connected (${response.stats.total} items)`;
       connectionStatus.className = 'connection-status connected';
     } else {
@@ -436,7 +436,7 @@ async function checkConnectionStatus() {
     }
   } catch (error) {
     console.log('Connection error:', error);
-    statusIndicator.textContent = '🔴';
+    statusIndicator.textContent = 'ðŸ”´';
     
     if (error.message.includes('timeout')) {
       statusText.textContent = 'Connection timeout';
@@ -643,7 +643,7 @@ function showAILoadingState() {
   const saveBtnText = document.getElementById('saveBtnText');
   
   if (saveBtn && saveBtnIcon && saveBtnText) {
-    saveBtnIcon.textContent = '🤖';
+    saveBtnIcon.textContent = 'ðŸ¤–';
     saveBtnText.textContent = 'AI Analyzing...';
     saveBtn.style.opacity = '0.7';
   }
@@ -656,7 +656,7 @@ function hideAILoadingState() {
   const saveBtnText = document.getElementById('saveBtnText');
   
   if (saveBtn && saveBtnIcon && saveBtnText) {
-    saveBtnIcon.textContent = '💾';
+    saveBtnIcon.textContent = 'ðŸ’¾';
     saveBtnText.textContent = 'Save Item';
     saveBtn.style.opacity = '1';
   }
@@ -706,7 +706,7 @@ async function init() {
   let meta = null;
   if (!editingItemId) {
     meta = await getMetadata();
-    document.getElementById('pageMeta').textContent = `${meta.siteName} • ${meta.url}`;
+    document.getElementById('pageMeta').textContent = `${meta.siteName} â€¢ ${meta.url}`;
     document.getElementById('title').value = meta.title || '';
   }
 
@@ -772,7 +772,7 @@ async function init() {
     const statusText = document.getElementById('statusText');
     const connectionStatus = document.getElementById('connectionStatus');
     
-    statusIndicator.textContent = '⚪';
+    statusIndicator.textContent = 'âšª';
     statusText.textContent = 'Connection check failed';
     connectionStatus.className = 'connection-status disconnected';
   });
@@ -795,7 +795,7 @@ async function init() {
     const originalText = document.getElementById('saveBtnText').textContent;
     
     // Visual feedback
-    document.getElementById('saveBtnIcon').textContent = '⏳';
+    document.getElementById('saveBtnIcon').textContent = 'â³';
     document.getElementById('saveBtnText').textContent = editingItemId ? 'Updating...' : 'Saving...';
     saveBtn.disabled = true;
     
@@ -831,6 +831,10 @@ async function init() {
           timeToConsume = estimateTimeToConsume(meta || {}, currentCategory);
         }
       } catch {}
+      if (typeof timeToConsume === 'number') {
+        try { console.log('time_to_consume_mins (computed):', timeToConsume); } catch {}
+        try { const badgeEl = document.getElementById('timeToConsumeBadge'); if (badgeEl) badgeEl.textContent = `⏱️ ${timeToConsume}m`; } catch {}
+      }
 
       const itemData = {
         title: document.getElementById('title').value.trim(),
@@ -878,7 +882,7 @@ async function init() {
       await queueAdapter.enqueue(item);
       
       // Success feedback
-      document.getElementById('saveBtnIcon').textContent = '✓';
+      document.getElementById('saveBtnIcon').textContent = 'âœ“';
       document.getElementById('saveBtnText').textContent = editingItemId ? 'Updated!' : 'Saved!';
       try{ if (window.showToast) showToast(editingItemId ? 'Item updated' : 'Item saved', 'success'); }catch{}
       
@@ -906,7 +910,7 @@ async function init() {
     } catch (error) {
       console.error('Save error:', error);
       // Error feedback
-      document.getElementById('saveBtnIcon').textContent = '❌';
+      document.getElementById('saveBtnIcon').textContent = 'âŒ';
       document.getElementById('saveBtnText').textContent = 'Error';
       setTimeout(() => {
         document.getElementById('saveBtnIcon').textContent = originalIcon;
@@ -1101,3 +1105,4 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
