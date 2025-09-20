@@ -573,13 +573,10 @@ async function applyAISuggestions(meta) {
       if (aiOptions.prefill_category && suggestions.category) {
         const categorySelect = document.getElementById('category');
         const allowedCategories = ['Movie','TV','Trailer','Video','Blog','Podcast','Book','Course','Game','Other'];
-        
-        if (allowedCategories.includes(suggestions.category)) {
-          // Only change if currently set to 'Other' or default
-          if (!categorySelect.value || categorySelect.value === 'Other') {
-            categorySelect.value = suggestions.category;
-            console.log('Applied category suggestion:', suggestions.category);
-          }
+        // Apply if valid and user hasn't manually changed
+        if (allowedCategories.includes(suggestions.category) && !(categorySelect?.dataset?.userChanged)) {
+          categorySelect.value = suggestions.category;
+          console.log('Applied category suggestion:', suggestions.category);
         }
       }
       
@@ -587,13 +584,10 @@ async function applyAISuggestions(meta) {
       if (aiOptions.prefill_priority && suggestions.priority) {
         const prioritySelect = document.getElementById('priority');
         const allowedPriorities = ['low', 'medium', 'high'];
-        
-        if (allowedPriorities.includes(suggestions.priority)) {
-          // Only change if currently set to default 'medium'
-          if (!prioritySelect.value || prioritySelect.value === 'medium') {
-            prioritySelect.value = suggestions.priority;
-            console.log('Applied priority suggestion:', suggestions.priority);
-          }
+        // Apply if valid and user hasn't manually changed
+        if (allowedPriorities.includes(suggestions.priority) && !(prioritySelect?.dataset?.userChanged)) {
+          prioritySelect.value = suggestions.priority;
+          console.log('Applied priority suggestion:', suggestions.priority);
         }
       }
       
@@ -690,6 +684,14 @@ async function init() {
         if (window.setUIPrefs) await setUIPrefs({ popup_compact: ct.checked });
       });
     }
+  } catch {}
+
+  // Mark fields as user-changed to prevent AI overwriting manual choices
+  try {
+    const categoryEl = document.getElementById('category');
+    if (categoryEl) categoryEl.addEventListener('change', () => { categoryEl.dataset.userChanged = '1'; });
+    const priorityEl = document.getElementById('priority');
+    if (priorityEl) priorityEl.addEventListener('change', () => { priorityEl.dataset.userChanged = '1'; });
   } catch {}
 
   // Stats modal close handlers
