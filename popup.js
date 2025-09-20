@@ -529,10 +529,9 @@ async function applyAISuggestions(meta) {
     
     console.log('AI options:', aiOptions);
     
-    // Check if AI is configured and any prefill option is enabled
+    // Check prefill options; API key is optional (fallback rules will run without it)
     if (!aiOptions.api_key) {
-      console.log('No AI API key configured, skipping AI suggestions');
-      return false;
+      console.log('No AI API key configured; will try rule-based fallback.');
     }
     
     const hasAnyPrefillOption = aiOptions.prefill_title || 
