@@ -32,6 +32,8 @@ async function loadConfig() {
 
     // AI settings
     document.getElementById('apiKey').value = ai.api_key || '';
+    if (document.getElementById('tmdbKey')) document.getElementById('tmdbKey').value = ai.tmdb_api_key || '';
+    if (document.getElementById('jwCountry')) document.getElementById('jwCountry').value = ai.jw_country || 'US';
     document.getElementById('prefillTitle').checked = !!ai.prefill_title;
     document.getElementById('prefillCategory').checked = !!ai.prefill_category;
     document.getElementById('prefillPriority').checked = !!ai.prefill_priority;
@@ -68,6 +70,8 @@ async function saveAllConfig() {
       prefill_tags: document.getElementById('prefillTags').checked,
       prefill_summary: document.getElementById('prefillSummary').checked,
       prefill_time: (document.getElementById('prefillTime')?.checked) || false,
+      tmdb_api_key: (document.getElementById('tmdbKey')?.value || '').trim(),
+      jw_country: (document.getElementById('jwCountry')?.value || 'US').trim(),
     };
     await chrome.storage.local.set({ [AI_OPTS_KEY]: aiConfig });
 

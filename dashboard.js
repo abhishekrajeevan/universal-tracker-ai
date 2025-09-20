@@ -108,6 +108,25 @@ function renderList(items, sortKey) {
         ${it.url ? `<a class="link" href="${it.url}" target="_blank">Open</a>` : ''}
       </div>
     `;
+    // Add time badge programmatically to avoid template issues
+    try {
+      if (typeof it.time_to_consume_mins === 'number') {
+        const meta = div.querySelector('.meta');
+        const s = document.createElement('span');
+        s.textContent = `• ⏱️ ${it.time_to_consume_mins}m`;
+        meta.appendChild(s);
+      }
+    } catch {}
+    // Add Enrich button programmatically
+    try {
+      const actions = div.querySelector('.item-actions');
+      const eb = document.createElement('button');
+      eb.className = 'action-btn';
+      eb.setAttribute('data-act','enrich');
+      eb.setAttribute('data-id', it.id);
+      eb.textContent = 'Enrich';
+      actions.appendChild(eb);
+    } catch {}
     list.appendChild(div);
   }
 
@@ -132,11 +151,100 @@ function renderList(items, sortKey) {
       }
     } else if (act === 'edit') {
       openEditModal(it);
+    } else if (act === 'enrich') {
+      // Per-item enrichment flow
+      btn.disabled = true;
+      btn.textContent = 'Enriching...';
+      try {
+        const resp = await new Promise((resolve, reject) => {
+          chrome.runtime.sendMessage({ type:'ENRICH_ITEM', id }, (r) => {
+            if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+            resolve(r);
+          });
+        });
+        if (resp && resp.success) {
+          const sugg = resp.suggestions || {};
+          const panel = document.createElement('div');
+          panel.style.cssText = 'margin-top:8px;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;font-size:12px;';
+          panel.innerHTML = `
+            <div><strong>Enrichment</strong></div>
+            <div>Genre: <em>${sugg.genre || '—'}</em> <button class="action-btn" data-apply="genre">Apply</button></div>
+            <div>Streaming: <em>${sugg.streaming_availability || '—'}</em> <button class="action-btn" data-apply="stream">Apply</button></div>
+          `;
+          const container = btn.closest('.item');
+          container.appendChild(panel);
+          panel.addEventListener('click', async (e) => {
+            const ap = e.target.closest('button');
+            if (!ap) return;
+            const kind = ap.getAttribute('data-apply');
+            const fields = {};
+            if (kind === 'genre' && sugg.genre) fields.genre = sugg.genre;
+            if (kind === 'stream' && sugg.streaming_availability) fields.streaming_availability = sugg.streaming_availability;
+            if (!Object.keys(fields).length) return;
+            try {
+              const r2 = await new Promise((resolve, reject) => {
+                chrome.runtime.sendMessage({ type:'APPLY_ENRICHMENT', id, fields }, (r) => {
+                  if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+                  resolve(r);
+                });
+              });
+              if (r2 && r2.success) {
+                if (window.showToast) showToast('Applied', 'success');
+              }
+            } catch (err) { if (window.showToast) showToast('Apply failed: ' + err.message, 'error'); }
+          });
+        } else {
+          if (window.showToast) showToast('No enrichment available', 'info');
+        }
+      } catch (err) {
+        alert('Enrichment failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enrich';
+      }
     }
     // Re-render after any action
     const updated = await getAllItems();
     applyFiltersAndRender(updated);
   };
+
+  // Batch enrichment for visible items
+  const enrichBtn = document.getElementById('enrichVisibleBtn');
+  if (enrichBtn) enrichBtn.addEventListener('click', async () => {
+    try {
+      const items = await getAllItems();
+      const filters = readFiltersFromUI();
+      const visible = items.filter(it => matchesFilters(it, filters));
+      const total = visible.length;
+      let done = 0;
+      const statsbar = document.getElementById('statsbar');
+      enrichBtn.disabled = true;
+      for (const it of visible) {
+        statsbar.textContent = `Enriching ${done+1}/${total}...`;
+        const resp = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ type:'ENRICH_ITEM', id: it.id }, resolve);
+        });
+        if (resp && resp.success) {
+          const fields = {};
+          if (resp.suggestions?.genre) fields.genre = resp.suggestions.genre;
+          if (resp.suggestions?.streaming_availability) fields.streaming_availability = resp.suggestions.streaming_availability;
+          if (Object.keys(fields).length) {
+            await new Promise((resolve) => {
+              chrome.runtime.sendMessage({ type:'APPLY_ENRICHMENT', id: it.id, fields }, resolve);
+            });
+          }
+        }
+        done++;
+      }
+      statsbar.textContent = `Enrichment completed for ${done}/${total} items`;
+      if (window.showToast) showToast('Batch enrichment done', 'success');
+    } catch (e) {
+      alert('Batch enrichment failed: ' + e.message);
+    } finally {
+      enrichBtn.disabled = false;
+      setTimeout(()=>{ const sb=document.getElementById('statsbar'); if (sb) sb.textContent=''; }, 3000);
+    }
+  });
 }
 
 function readFiltersFromUI() {

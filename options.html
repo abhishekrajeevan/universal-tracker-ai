@@ -89,14 +89,24 @@
           <button class="btn btn-warning" id="triggerArchiveBtn"><span>📦</span> Archive Now</button>
         </div>
       </div>
-      <div class="section">
-        <h2><span class="section-icon">🤖</span> AI Configuration</h2>
-        <div class="form-group">
-          <label for="apiKey">Google Gemini API Key</label>
-          <input type="password" id="apiKey" placeholder="Enter your Gemini API key">
+            <div class="section">
+                <h2><span class="section-icon">🤖</span> AI Configuration</h2>
+                <div class="form-group">
+                    <label for="apiKey">Google Gemini API Key</label>
+                    <input type="password" id="apiKey" placeholder="Enter your Gemini API key">
           <div class="help-text">Get your free API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a>. The API includes a generous free tier with 15 requests per minute.</div>
-        </div>
-      </div>
+                </div>
+                <div class="form-group">
+                    <label for="tmdbKey">TMDb API Key (optional)</label>
+                    <input type="password" id="tmdbKey" placeholder="Enter your TMDb API key">
+                    <div class="help-text">Used for deferred enrichment: genres and streaming availability.</div>
+                </div>
+                <div class="form-group">
+                    <label for="jwCountry">JustWatch Country (ISO-3166-1, e.g., US)</label>
+                    <input type="text" id="jwCountry" placeholder="US">
+                    <div class="help-text">Country code for watch providers (via TMDb).</div>
+                </div>
+            </div>
       <div class="section">
         <h2><span class="section-icon">⚙️</span> AI Prefill Options</h2>
         <p style="margin-bottom: 20px; color: #64748b;">Choose which fields should be automatically filled by AI when saving new items:</p>
