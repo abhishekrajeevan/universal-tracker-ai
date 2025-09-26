@@ -368,7 +368,7 @@ async function startEditing(item) {
   
   // Update UI
   document.getElementById('editIndicator').style.display = 'block';
-  document.getElementById('saveBtnIcon').textContent = 'âœï¸';
+  document.getElementById('saveBtnIcon').textContent = '➕';
   document.getElementById('saveBtnText').textContent = 'Update Item';
   
   // Hide page meta when editing
@@ -395,7 +395,7 @@ function cancelEditing() {
   
   // Update UI
   document.getElementById('editIndicator').style.display = 'none';
-  document.getElementById('saveBtnIcon').textContent = 'ðŸ’¾';
+  document.getElementById('saveBtnIcon').textContent = '💾';
   document.getElementById('saveBtnText').textContent = 'Save Item';
   document.getElementById('pageMeta').style.display = 'flex';
 }
@@ -427,7 +427,7 @@ async function checkConnectionStatus() {
     console.log('Connection status response:', response);
     
     if (response && response.success) {
-      statusIndicator.textContent = 'ðŸŸ¢';
+      statusIndicator.textContent = '✅';
       statusText.textContent = `Connected (${response.stats.total} items)`;
       connectionStatus.className = 'connection-status connected';
     } else {
@@ -436,7 +436,7 @@ async function checkConnectionStatus() {
     }
   } catch (error) {
     console.log('Connection error:', error);
-    statusIndicator.textContent = 'ðŸ”´';
+    statusIndicator.textContent = '❌';
     
     if (error.message.includes('timeout')) {
       statusText.textContent = 'Connection timeout';
@@ -643,7 +643,7 @@ function showAILoadingState() {
   const saveBtnText = document.getElementById('saveBtnText');
   
   if (saveBtn && saveBtnIcon && saveBtnText) {
-    saveBtnIcon.textContent = 'ðŸ¤–';
+    saveBtnIcon.textContent = '🧠';
     saveBtnText.textContent = 'AI Analyzing...';
     saveBtn.style.opacity = '0.7';
   }
@@ -656,7 +656,7 @@ function hideAILoadingState() {
   const saveBtnText = document.getElementById('saveBtnText');
   
   if (saveBtn && saveBtnIcon && saveBtnText) {
-    saveBtnIcon.textContent = 'ðŸ’¾';
+    saveBtnIcon.textContent = '👌';
     saveBtnText.textContent = 'Save Item';
     saveBtn.style.opacity = '1';
   }
