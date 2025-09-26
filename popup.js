@@ -23,27 +23,27 @@ async function getMetadata() {
 
 function getCategoryIcon(category) {
   const icons = {
-    'Movie': 'ðŸŽ¬',
-    'TV': 'ðŸ“º', 
-    'Trailer': 'ðŸŽ­',
-    'Video': 'ðŸŽ¥',
-    'Blog': 'ðŸ“',
-    'Podcast': 'ðŸŽ§',
-    'Book': 'ðŸ“–',
-    'Course': 'ðŸŽ“',
-    'Game': 'ðŸŽ®',
-    'Other': 'ðŸ“„'
+    'Movie': '🎬',
+    'TV': '📺', 
+    'Trailer': '🎭',
+    'Video': '🎥',
+    'Blog': '📝',
+    'Podcast': '🎧',
+    'Book': '📖',
+    'Course': '🎓',
+    'Game': '🎮',
+    'Other': '📄'
   };
-  return icons[category] || 'ðŸ“„';
+  return icons[category] || '📄';
 }
 
 function getPriorityIcon(priority) {
   const icons = {
-    'low': 'ðŸ”µ',
-    'medium': 'ðŸŸ¡',
-    'high': 'ðŸ”´'
+    'low': '🟢',
+    'medium': '🟡',
+    'high': '🔴'
   };
-  return icons[priority] || 'ðŸŸ¡';
+  return icons[priority] || '🟡';
 }
 
 // Inline SVG icons (ASCII-only) for robust rendering
@@ -197,7 +197,7 @@ function renderItems(items) {
   if (items.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
-        <div class="empty-state-icon">ðŸ“š</div>
+        <div class="empty-state-icon">📚</div>
         <div>No items yet</div>
         <div style="font-size: 12px; margin-top: 4px; opacity: 0.7;">Start tracking content by saving your first item!</div>
       </div>
@@ -217,43 +217,43 @@ function renderItems(items) {
     if (it.reminder_time) {
       const reminderText = formatReminderTime(it.reminder_time);
       const isActive = new Date(it.reminder_time) > new Date();
-      reminderDisplay = `<span class="reminder-pill ${isActive ? 'reminder-active' : ''}">${isActive ? 'â°' : 'â°'} ${reminderText}</span>`;
+      reminderDisplay = `<span class="reminder-pill ${isActive ? 'reminder-active' : ''}">${isActive ? '⏰' : '⏰'} ${reminderText}</span>`;
     }
     
     div.innerHTML = `
       <div class="item-title">
         <span class="category-icon">${getCategoryIcon(it.category)}</span>
         ${it.title || '(untitled)'}
-        <span class="status-pill status-${it.status}">${it.status === 'done' ? 'âœ… Done' : 'ðŸ“‹ To Do'}</span>
+        <span class="status-pill status-${it.status}">${it.status === 'done' ? '✅ Done' : '📋 To Do'}</span>
         ${editingItemId === it.id ? '<span class="edit-indicator">Editing</span>' : ''}
       </div>
       <div class="item-meta">
         <span>${getPriorityIcon(it.priority || 'medium')} ${it.category || 'Other'}</span>
-        <span>â€¢</span>
+        <span>•</span>
         <span>${host}</span>
-        ${it.tags && it.tags.length > 0 ? `<span>â€¢</span><span>ðŸ·ï¸ ${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>` : ''}
+        ${it.tags && it.tags.length > 0 ? `<span>•</span><span>🏷️ ${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>` : ''}
         ${reminderDisplay}
       </div>
       <div class="item-actions">
         <button class="btn btn-secondary btn-small" data-act="toggle" data-id="${it.id}">
-          ${it.status === 'done' ? 'â†©ï¸ Mark To Do' : 'âœ… Mark Done'}
+          ${it.status === 'done' ? '↩️ Mark To Do' : '✅ Mark Done'}
         </button>
         <button class="btn btn-secondary btn-small" data-act="edit" data-id="${it.id}">
-          âœï¸ Edit
+          ✏️ Edit
         </button>
         <button class="btn btn-secondary btn-small" data-act="remove" data-id="${it.id}">
-          ðŸ—‘ï¸ Delete
+          🗑️ Delete
         </button>
-        ${it.url ? `<a class="link" href="${it.url}" target="_blank">ðŸ”— Open</a>` : ''}
+        ${it.url ? `<a class="link" href="${it.url}" target="_blank">🔗 Open</a>` : ''}
       </div>
     `;
     // Clean labels and hide host bullet when URL absent
     const toggleBtn = div.querySelector('button[data-act="toggle"]');
-    if (toggleBtn) toggleBtn.textContent = it.status === 'done' ? 'â†º Mark To Do' : 'âœ“ Mark Done';
+    if (toggleBtn) toggleBtn.textContent = it.status === 'done' ? '▶ Mark To Do' : '✓ Mark Done';
     const editBtn = div.querySelector('button[data-act="edit"]');
-    if (editBtn) editBtn.textContent = 'âœŽ Edit';
+    if (editBtn) editBtn.textContent = '✎ Edit';
     const delBtn = div.querySelector('button[data-act="remove"]');
-    if (delBtn) delBtn.textContent = 'ðŸ—‘ Delete';
+    if (delBtn) delBtn.textContent = '🗑 Delete';
     const linkEl = div.querySelector('a.link');
     if (linkEl) linkEl.textContent = 'Open';
     if (!host) {
@@ -285,9 +285,9 @@ function renderItems(items) {
 
       const metaEl2 = div.querySelector('.item-meta');
       if (metaEl2) {
-        let html2 = `<span>${typeof priorityDotSVG==='function'?priorityDotSVG(it.priority || 'medium'):'â€¢'} ${it.category || 'Other'}</span>`;
-        if (host) html2 += `<span>â€¢</span><span>${host}</span>`;
-        if (it.tags && it.tags.length > 0) html2 += `<span>â€¢</span><span>${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>`;
+        let html2 = `<span>${typeof priorityDotSVG==='function'?priorityDotSVG(it.priority || 'medium'):'•'} ${it.category || 'Other'}</span>`;
+        if (host) html2 += `<span>•</span><span>${host}</span>`;
+        if (it.tags && it.tags.length > 0) html2 += `<span>•</span><span>${it.tags.slice(0, 2).join(', ')}${it.tags.length > 2 ? '...' : ''}</span>`;
         html2 += `${reminderDisplay}`;
         metaEl2.innerHTML = html2;
       }
